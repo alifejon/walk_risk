@@ -1,3 +1,1 @@
-"""
-Player model definitions
-"""
+"""Player models"""

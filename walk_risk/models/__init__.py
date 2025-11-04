@@ -1,3 +1,1 @@
-"""
-Data models and schemas
-"""
+"""Game models"""

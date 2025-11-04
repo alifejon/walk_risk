@@ -1,3 +1,0 @@
-"""
-Market data source integrations
-"""

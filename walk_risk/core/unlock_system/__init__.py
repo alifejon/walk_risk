@@ -1,3 +1,0 @@
-"""
-Risk unlock mechanism system
-"""

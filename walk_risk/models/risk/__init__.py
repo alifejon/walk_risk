@@ -1,3 +1,1 @@
-"""
-Risk model definitions
-"""
+"""Risk models"""

@@ -7,12 +7,26 @@ requires-python = ">=3.12"
 dependencies = [
     "aiohttp>=3.9.0",
     "aiofiles>=23.0.0",
-    "pydantic>=2.0.0",
+    "pydantic[email]>=2.0.0",
     "rich>=13.0.0",
     "click>=8.0.0",
     "python-dotenv>=1.0.0",
-    "numpy>=1.24.0"
+    "numpy>=1.24.0",
+    "yfinance>=0.2.18",
+    "pandas>=2.0.0",
+    "asyncio-throttle>=1.0.2",
+    "python-dateutil>=2.8.0",
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "asyncpg>=0.30.0",
+    "sqlalchemy[asyncio]>=2.0.43",
+    "alembic>=1.16.5",
+    "python-jose[cryptography]>=3.5.0",
+    "passlib[bcrypt]>=1.7.4",
+    "aiosqlite>=0.21.0",
+    "bcrypt>=4.0.0",
 ]
 
 [project.scripts]
 walk-risk = "walk_risk.ui.cli:cli"
+walk-risk-api = "walk_risk.api.main:run_development_server"

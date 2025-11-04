@@ -1,3 +1,1 @@
-"""
-Core game engine modules
-"""
+"""Core game systems"""

@@ -1,3 +1,1 @@
-"""
-Portfolio and investment models
-"""
+"""Portfolio models"""

@@ -653,203 +653,27 @@ graph TD
    ```
 
 3. **스마트 리밸런싱 시스템**: 효율적 포트폴리오 조정
-   ```python
-   # 포트폴리오 자동 리밸런싱 시스템
-   import pandas as pd
-   import numpy as np
-   from datetime import datetime, timedelta
-   
-   class SmartRebalancer:
-       def __init__(self, target_allocation, rebalance_threshold=0.05):
-           self.target_allocation = target_allocation  # 목표 비중
-           self.rebalance_threshold = rebalance_threshold  # 5% 임계값
-           self.trading_cost_rate = 0.002  # 거래 비용 0.2%
-           
-       def calculate_current_allocation(self, portfolio):
-           """현재 포트폴리오 비중 계산"""
-           total_value = portfolio['current_value'].sum()
-           current_allocation = {}
-           
-           for index, row in portfolio.iterrows():
-               ticker = row['ticker']
-               weight = row['current_value'] / total_value
-               current_allocation[ticker] = weight
-           
-           return current_allocation
-       
-       def check_rebalance_needed(self, current_allocation):
-           """리밸런싱 필요 여부 판단"""
-           rebalance_signals = {}
-           
-           for ticker, target_weight in self.target_allocation.items():
-               current_weight = current_allocation.get(ticker, 0)
-               deviation = abs(current_weight - target_weight)
-               
-               if deviation > self.rebalance_threshold:
-                   rebalance_signals[ticker] = {
-                       'current': current_weight,
-                       'target': target_weight,
-                       'deviation': deviation,
-                       'action': 'BUY' if current_weight < target_weight else 'SELL'
-                   }
-           
-           return rebalance_signals
-       
-       def calculate_rebalance_trades(self, portfolio, rebalance_signals):
-           """리밸런싱 거래 계산"""
-           total_value = portfolio['current_value'].sum()
-           trades = []
-           
-           for ticker, signal in rebalance_signals.items():
-               current_value = portfolio[portfolio['ticker'] == ticker]['current_value'].iloc[0]
-               target_value = total_value * signal['target']
-               trade_amount = target_value - current_value
-               
-               # 거래 비용 고려
-               if abs(trade_amount) > total_value * 0.01:  # 1% 이상만 거래
-                   trades.append({
-                       'ticker': ticker,
-                       'action': signal['action'],
-                       'amount': trade_amount,
-                       'current_weight': signal['current'],
-                       'target_weight': signal['target'],
-                       'trading_cost': abs(trade_amount) * self.trading_cost_rate
-                   })
-           
-           return trades
-       
-       def optimize_tax_efficiency(self, trades, portfolio):
-           """세금 효율 최적화"""
-           optimized_trades = []
-           
-           for trade in trades:
-               ticker = trade['ticker']
-               stock_info = portfolio[portfolio['ticker'] == ticker].iloc[0]
-               
-               # 손실 종목 우선 매도 (Tax Loss Harvesting)
-               if trade['action'] == 'SELL' and stock_info['unrealized_gain'] < 0:
-                   trade['priority'] = 'HIGH'  # 높은 우선순위
-                   trade['tax_benefit'] = abs(stock_info['unrealized_gain']) * 0.22  # 세금 절약
-               
-               # 장기보유 종목 혜택 고려
-               holding_period = (datetime.now() - stock_info['purchase_date']).days
-               if holding_period > 365 * 2:  # 2년 이상 보유
-                   trade['long_term_benefit'] = True
-               
-               optimized_trades.append(trade)
-           
-           # 우선순위별 정렬
-           optimized_trades.sort(key=lambda x: x.get('priority', 'LOW'), reverse=True)
-           return optimized_trades
-       
-       def execute_smart_rebalancing(self, portfolio):
-           """스마트 리밸런싱 실행"""
-           # 1. 현재 비중 계산
-           current_allocation = self.calculate_current_allocation(portfolio)
-           
-           # 2. 리밸런싱 필요성 체크
-           rebalance_signals = self.check_rebalance_needed(current_allocation)
-           
-           if not rebalance_signals:
-               return {"message": "리밸런싱 불필요", "trades": []}
-           
-           # 3. 거래 계획 수립
-           trades = self.calculate_rebalance_trades(portfolio, rebalance_signals)
-           
-           # 4. 세금 효율 최적화
-           optimized_trades = self.optimize_tax_efficiency(trades, portfolio)
-           
-           return {
-               "message": "리밸런싱 실행 계획",
-               "trades": optimized_trades,
-               "total_trading_cost": sum([t['trading_cost'] for t in optimized_trades]),
-               "expected_tax_benefit": sum([t.get('tax_benefit', 0) for t in optimized_trades])
-           }
-   
-   # 월별 자동 리밸런싱 스케줄러
-   class RebalancingScheduler:
-       def __init__(self, rebalancer):
-           self.rebalancer = rebalancer
-           self.last_rebalance = None
-           
-       def should_rebalance(self, force_check=False):
-           """리밸런싱 시점 판단"""
-           if force_check:
-               return True
-               
-           if self.last_rebalance is None:
-               return True
-               
-           # 월 1회 정기 리밸런싱
-           days_since_last = (datetime.now() - self.last_rebalance).days
-           return days_since_last >= 30
-       
-       def schedule_rebalancing(self, portfolio, market_conditions):
-           """스케줄 기반 리밸런싱"""
-           rebalance_plan = {
-               'scheduled_date': datetime.now(),
-               'market_volatility': market_conditions.get('vix', 20),
-               'action': 'HOLD'
-           }
-           
-           # 시장 상황별 리밸런싱 전략
-           if market_conditions.get('vix', 20) > 30:  # 고변동성
-               rebalance_plan['action'] = 'DEFENSIVE'
-               rebalance_plan['message'] = "방어적 리밸런싱 실행"
-           elif market_conditions.get('trend', 'NEUTRAL') == 'BULLISH':
-               rebalance_plan['action'] = 'AGGRESSIVE' 
-               rebalance_plan['message'] = "공격적 리밸런싱 실행"
-           else:
-               rebalance_plan['action'] = 'NORMAL'
-               rebalance_plan['message'] = "정상 리밸런싱 실행"
-           
-           return rebalance_plan
-   
-   # 사용 예시
-   target_allocation = {
-       '005930': 0.30,  # 삼성전자 30%
-       '000660': 0.20,  # SK하이닉스 20%
-       'KODEX_200': 0.25,  # KODEX 200 25%
-       'TIGER_미국': 0.15,  # TIGER 미국 15%
-       'CASH': 0.10     # 현금 10%
-   }
-   
-   # 포트폴리오 데이터 예시
-   portfolio_data = pd.DataFrame({
-       'ticker': ['005930', '000660', 'KODEX_200', 'TIGER_미국', 'CASH'],
-       'current_value': [3200000, 1800000, 2800000, 1500000, 700000],
-       'unrealized_gain': [200000, -100000, 50000, 100000, 0],
-       'purchase_date': pd.to_datetime(['2022-01-01', '2022-06-01', '2023-01-01', '2023-06-01', '2023-12-01'])
-   })
-   
-   # 리밸런서 생성 및 실행
-   rebalancer = SmartRebalancer(target_allocation)
-   result = rebalancer.execute_smart_rebalancing(portfolio_data)
-   
-   print("리밸런싱 결과:")
-   for trade in result['trades']:
-       print(f"{trade['ticker']}: {trade['action']} {trade['amount']:,.0f}원")
    ```
-   
-   🔄 리밸런싱 자동화 규칙 (코드로 구현):
+   🔄 리밸런싱 자동화 규칙:
    
    조건부 실행 규칙:
-   - 종목 비중 5% 이상 이탈: 월간 점검 (자동 감지)
-   - 섹터 비중 10% 이상 이탈: 즉시 검토 (실시간 알림)
-   - 전체 손익률 ±20% 도달: 전략 재검토 (자동 트리거)
-   - 신규 자금 추가: 균형 배분 실행 (최적화 알고리즘)
+   - 종목 비중 5% 이상 이탈: 월간 점검
+   - 섹터 비중 10% 이상 이탈: 즉시 검토
+   - 전체 손익률 ±20% 도달: 전략 재검토
+   - 신규 자금 추가: 균형 배분 실행
    
-   세금 효율 최적화 (알고리즘):
-   - 손실 종목 우선 정리 (Tax Loss Harvesting) - 자동 우선순위
-   - ISA 계좌 활용한 고위험 매매 - 계좌별 최적화
-   - 배당락일 전후 매매 타이밍 조절 - 일정 기반 자동화
-   - 장기보유 혜택 최대화 전략 - 보유기간 자동 추적
+   세금 효율 최적화:
+   - 손실 종목 우선 정리 (Tax Loss Harvesting)
+   - ISA 계좌 활용한 고위험 매매
+   - 배당락일 전후 매매 타이밍 조절
+   - 장기보유 혜택 최대화 전략
    
-   거래비용 최소화 (스마트 실행):
-   - 소액 조정은 신규 자금으로 해결 - 비용 효율 계산
-   - 동일 증권사 ETF 간 교환 활용 - 수수료 최적화
-   - 분할 매매로 시장 충격 최소화 - 알고리즘 매매
-   - 유동성 풍부한 시간대 거래 - 시간 기반 자동화
+   거래비용 최소화:
+   - 소액 조정은 신규 자금으로 해결
+   - 동일 증권사 ETF 간 교환 활용
+   - 분할 매매로 시장 충격 최소화
+   - 유동성 풍부한 시간대 거래
+   ```
 
 4. **위험관리 및 스트레스 테스트**: 포트폴리오 내구성 검증
    ```
@@ -954,91 +778,16 @@ graph TD
 
 **챌린지**:
 1. **회계 CSI 되기**: 재무제표 수사관 되기
-   ```python
-   # 재무제표 분석 자동화 코드 예시
-   import pandas as pd
-   import numpy as np
-   
-   def financial_health_score(company_data):
-       """기업 재무 건전성 자동 평가 시스템"""
-       score = 100
-       
-       # 유동성 검사
-       current_ratio = company_data['current_assets'] / company_data['current_liabilities']
-       if current_ratio < 1.0:
-           score -= 20
-       elif current_ratio < 1.5:
-           score -= 10
-       
-       # 수익성 검사
-       roe = company_data['net_income'] / company_data['shareholders_equity']
-       if roe < 0.05:  # ROE 5% 미만
-           score -= 15
-       
-       # 매출채권 증가율 vs 매출 증가율 비교
-       receivables_growth = (company_data['accounts_receivable_current'] / 
-                           company_data['accounts_receivable_previous'] - 1)
-       sales_growth = (company_data['revenue_current'] / 
-                      company_data['revenue_previous'] - 1)
-       
-       if receivables_growth > sales_growth * 1.2:  # 매출채권이 매출보다 20% 이상 빠르게 증가
-           score -= 25  # 매출 조작 의심
-       
-       # 현금흐름 vs 순이익 괴리 검사
-       cash_flow_ratio = company_data['operating_cash_flow'] / company_data['net_income']
-       if cash_flow_ratio < 0.8:  # 현금흐름이 순이익의 80% 미만
-           score -= 20  # 이익의 질 의심
-       
-       # 부채 증가율 검사
-       debt_growth = (company_data['total_debt_current'] / 
-                     company_data['total_debt_previous'] - 1)
-       if debt_growth > 0.3:  # 부채 30% 이상 증가
-           score -= 15
-       
-       return max(0, score)  # 최소 0점
-   
-   # 실전 분석 코드
-   def analyze_company(ticker):
-       """특정 기업 종합 분석"""
-       # 데이터 수집 (실제로는 API 연동)
-       financial_data = get_financial_data(ticker)
-       
-       # 건전성 점수 계산
-       health_score = financial_health_score(financial_data)
-       
-       # 위험 신호 체크
-       risk_flags = []
-       
-       if financial_data['audit_opinion'] != '적정':
-           risk_flags.append("감사의견 한정")
-       
-       if financial_data['related_party_transactions'] > financial_data['revenue'] * 0.3:
-           risk_flags.append("과도한 특수관계자 거래")
-       
-       if financial_data['contingent_liabilities'] > financial_data['shareholders_equity'] * 0.5:
-           risk_flags.append("대규모 우발부채")
-       
-       return {
-           'health_score': health_score,
-           'risk_flags': risk_flags,
-           'recommendation': 'BUY' if health_score > 70 else 'HOLD' if health_score > 50 else 'SELL'
-       }
-   
-   # 사용 예시
-   result = analyze_company('005930')  # 삼성전자
-   print(f"건전성 점수: {result['health_score']}/100")
-   print(f"위험 신호: {result['risk_flags']}")
-   print(f"투자 추천: {result['recommendation']}")
    ```
-   
    실전 수사 과제:
    의심스러운 기업 재무제표 분석
    
    체크 포인트:
-   - 매출 대비 매출채권 증가율 비교 (코드로 자동화)
-   - 현금흐름 vs 순이익 괴리 분석 (알고리즘 활용)
-   - 특수관계자 거래 비중 확인 (임계값 설정)
-   - 각주에서 우발부채 확인 (자동 플래그 시스템)
+   - 매출 대비 매출채권 증가율 비교
+   - 현금흐름 vs 순이익 괴리 분석
+   - 특수관계자 거래 비중 확인
+   - 각주에서 우발부채 확인
+   ```
 
 2. **조기경보 시스템 구축**: 위험 신호 사전 감지
    - 유동비율 < 1.0 기업 모니터링
@@ -1705,355 +1454,26 @@ graph TD
 
 **챌린지**:
 1. **위기 레이더 구축**: 위기 신호 조기 감지 시스템
-   ```python
-   # 위기 감지 자동화 시스템
-   import yfinance as yf
-   import pandas as pd
-   import numpy as np
-   from datetime import datetime, timedelta
-   
-   class CrisisDetector:
-       def __init__(self):
-           self.crisis_score = 0
-           self.alert_threshold = 70  # 70점 이상 시 위기 경보
-           
-       def check_vix_level(self):
-           """VIX 지수 체크"""
-           vix = yf.download("^VIX", period="30d")['Close']
-           current_vix = vix[-1]
-           avg_vix = vix.mean()
-           
-           if current_vix > 40:
-               return 30, "극도 공포 상태"
-           elif current_vix > 30:
-               return 20, "높은 변동성"
-           elif current_vix > avg_vix * 1.5:
-               return 10, "평균 대비 높은 수준"
-           else:
-               return 0, "정상 수준"
-       
-       def check_yield_curve(self):
-           """수익률 곡선 역전 체크"""
-           # 10년 - 2년 금리차
-           ten_year = yf.download("^TNX", period="30d")['Close'][-1]
-           two_year = yf.download("^TNX", period="30d")['Close'][-1] * 0.8  # 근사치
-           
-           spread = ten_year - two_year
-           
-           if spread < -0.5:
-               return 25, "심각한 역전"
-           elif spread < 0:
-               return 15, "수익률 곡선 역전"
-           elif spread < 0.5:
-               return 5, "평탄화 진행"
-           else:
-               return 0, "정상"
-       
-       def check_credit_spread(self):
-           """신용 스프레드 확대 체크"""
-           # HYG(하이일드 채권) vs TLT(장기 국채) 스프레드
-           hyg = yf.download("HYG", period="90d")['Close']
-           tlt = yf.download("TLT", period="90d")['Close']
-           
-           # 상대 성과 계산
-           relative_performance = (hyg.pct_change().rolling(30).sum() - 
-                                 tlt.pct_change().rolling(30).sum())[-1]
-           
-           if relative_performance < -0.1:
-               return 20, "신용 위험 확대"
-           elif relative_performance < -0.05:
-               return 10, "신용 스프레드 확대"
-           else:
-               return 0, "정상"
-       
-       def check_market_breadth(self):
-           """시장 폭 분석"""
-           # S&P 500 vs 동일가중 ETF 비교
-           spy = yf.download("SPY", period="60d")['Close']
-           rsp = yf.download("RSP", period="60d")['Close']
-           
-           # 상대 성과 (최근 30일)
-           spy_return = spy.pct_change().rolling(30).sum()[-1]
-           rsp_return = rsp.pct_change().rolling(30).sum()[-1]
-           
-           breadth_diff = rsp_return - spy_return
-           
-           if breadth_diff < -0.05:
-               return 15, "시장 폭 약화"
-           elif breadth_diff < -0.02:
-               return 8, "대형주 편중"
-           else:
-               return 0, "건전한 시장 폭"
-       
-       def generate_crisis_report(self):
-           """위기 종합 리포트 생성"""
-           vix_score, vix_msg = self.check_vix_level()
-           yield_score, yield_msg = self.check_yield_curve()
-           credit_score, credit_msg = self.check_credit_spread()
-           breadth_score, breadth_msg = self.check_market_breadth()
-           
-           total_score = vix_score + yield_score + credit_score + breadth_score
-           
-           report = {
-               'total_crisis_score': total_score,
-               'alert_level': self.get_alert_level(total_score),
-               'indicators': {
-                   'VIX': {'score': vix_score, 'message': vix_msg},
-                   'Yield_Curve': {'score': yield_score, 'message': yield_msg},
-                   'Credit_Spread': {'score': credit_score, 'message': credit_msg},
-                   'Market_Breadth': {'score': breadth_score, 'message': breadth_msg}
-               },
-               'recommended_action': self.get_recommended_action(total_score)
-           }
-           
-           return report
-       
-       def get_alert_level(self, score):
-           if score >= 70:
-               return "🚨 위기 경보"
-           elif score >= 50:
-               return "⚠️ 주의 경보"
-           elif score >= 30:
-               return "🔶 관심 단계"
-           else:
-               return "✅ 정상"
-       
-       def get_recommended_action(self, score):
-           if score >= 70:
-               return "현금 비중 50% 이상 유지, 방어적 포지션"
-           elif score >= 50:
-               return "현금 비중 30% 이상, 단계적 매도 고려"
-           elif score >= 30:
-               return "현금 비중 20% 이상, 신중한 매수"
-           else:
-               return "정상적 투자 전략 유지"
-   
-   # 사용 예시
-   detector = CrisisDetector()
-   daily_report = detector.generate_crisis_report()
-   
-   print(f"위기 점수: {daily_report['total_crisis_score']}/100")
-   print(f"경보 수준: {daily_report['alert_level']}")
-   print(f"권장 행동: {daily_report['recommended_action']}")
    ```
-   
-   위기 신호 체크리스트 (자동화):
-   - VIX 지수 30 이상 지속 (코드로 실시간 모니터링)
-   - 수익률 곡선 역전 현상 (자동 계산 및 알림)
-   - 신용 스프레드 급확대 (채권 ETF 비교 분석)
-   - 달러 지수 급등/급락 (환율 변동성 추적)
-   - 원자재 가격 급변동 (코모디티 지수 모니터링)
+   위기 신호 체크리스트:
+   - VIX 지수 30 이상 지속
+   - 수익률 곡선 역전 현상
+   - 신용 스프레드 급확대
+   - 달러 지수 급등/급락
+   - 원자재 가격 급변동
+   ```
 
 2. **바닥 낚시 마스터**: 공포의 순간에 매수하기
-   ```python
-   # 위기 대응 단계별 행동 매뉴얼
-   class CrisisResponseSystem:
-       def __init__(self, total_cash=10000000):  # 1000만원 기준
-           self.total_cash = total_cash
-           self.crisis_levels = {
-               'level_1': {'trigger': -10, 'action': '관찰 대기'},
-               'level_2': {'trigger': -20, 'action': '1차 매수 (10%)'},
-               'level_3': {'trigger': -30, 'action': '2차 매수 (20%)'},
-               'level_4': {'trigger': -40, 'action': '3차 매수 (30%)'},
-               'level_5': {'trigger': -50, 'action': '4차 매수 (40%)'}
-           }
-           self.target_stocks = [
-               {'ticker': '005930', 'name': '삼성전자', 'weight': 0.3},
-               {'ticker': '000660', 'name': 'SK하이닉스', 'weight': 0.2},
-               {'ticker': '035420', 'name': 'NAVER', 'weight': 0.15},
-               {'ticker': '051910', 'name': 'LG화학', 'weight': 0.15},
-               {'ticker': '006400', 'name': '삼성SDI', 'weight': 0.2}
-           ]
-       
-       def assess_market_crash_level(self, current_kospi, peak_kospi):
-           """시장 급락 수준 평가"""
-           decline_percent = ((current_kospi - peak_kospi) / peak_kospi) * 100
-           
-           for level, info in self.crisis_levels.items():
-               if decline_percent <= info['trigger']:
-                   continue
-               else:
-                   return level, decline_percent, info['action']
-           
-           return 'level_5', decline_percent, self.crisis_levels['level_5']['action']
-       
-       def execute_crisis_buying(self, crisis_level):
-           """위기 단계별 매수 실행"""
-           if crisis_level == 'level_2':
-               buy_amount = self.total_cash * 0.1
-               self.buy_defensive_stocks(buy_amount)
-           elif crisis_level == 'level_3':
-               buy_amount = self.total_cash * 0.2
-               self.buy_quality_stocks(buy_amount)
-           elif crisis_level == 'level_4':
-               buy_amount = self.total_cash * 0.3
-               self.buy_growth_stocks(buy_amount)
-           elif crisis_level == 'level_5':
-               buy_amount = self.total_cash * 0.4
-               self.buy_aggressive_stocks(buy_amount)
-       
-       def buy_defensive_stocks(self, amount):
-           """방어주 매수 (1차)"""
-           defensive_stocks = ['009150', '285130']  # 삼성전기, SK하이닉스
-           return self.distribute_buying(amount, defensive_stocks)
-       
-       def buy_quality_stocks(self, amount):
-           """우량주 매수 (2차)"""
-           quality_stocks = ['005930', '000660']  # 삼성전자, SK하이닉스
-           return self.distribute_buying(amount, quality_stocks)
-       
-       def buy_growth_stocks(self, amount):
-           """성장주 매수 (3차)"""
-           growth_stocks = ['035420', '051910']  # 네이버, LG화학
-           return self.distribute_buying(amount, growth_stocks)
-       
-       def buy_aggressive_stocks(self, amount):
-           """공격적 매수 (4차)"""
-           all_stocks = [stock['ticker'] for stock in self.target_stocks]
-           return self.distribute_buying(amount, all_stocks)
-       
-       def distribute_buying(self, total_amount, stock_list):
-           """주식 리스트에 금액 분배"""
-           amount_per_stock = total_amount / len(stock_list)
-           buy_orders = []
-           
-           for ticker in stock_list:
-               buy_orders.append({
-                   'ticker': ticker,
-                   'amount': amount_per_stock,
-                   'strategy': 'crisis_buying',
-                   'timestamp': datetime.now()
-               })
-           
-           return buy_orders
-   
-   # 24시간 위기 대응 프로토콜
-   def crisis_24hour_protocol():
-       """위기 발생 첫 24시간 행동 지침"""
-       
-       hour_by_hour_actions = {
-           'hour_0_1': [
-               "📱 모든 뉴스 소스 차단 (패닉 방지)",
-               "💻 포트폴리오 현황 파악 (손실 규모 확인)",
-               "📊 위기 감지 시스템 점수 확인"
-           ],
-           'hour_1_3': [
-               "🧘 심리적 안정화 (10분 명상)",
-               "📋 위기 대응 매뉴얼 재검토",
-               "💰 사용 가능한 현금 확인"
-           ],
-           'hour_3_6': [
-               "📈 시장 급락 수준 정확히 측정",
-               "🎯 1차 매수 대상 종목 선정",
-               "⏰ 매수 타이밍 계획 수립"
-           ],
-           'hour_6_12': [
-               "💵 1차 매수 실행 (총 자금의 10%)",
-               "📝 매수 근거 및 계획 기록",
-               "🔍 추가 급락 가능성 모니터링"
-           ],
-           'hour_12_24': [
-               "📊 1차 매수 후 시장 반응 분석",
-               "📱 가족에게 현황 간단히 보고",
-               "🎯 2차 매수 준비 (급락 지속 시)"
-           ]
-       }
-       
-       return hour_by_hour_actions
-   
-   # 실제 사용 예시
-   crisis_system = CrisisResponseSystem()
-   current_kospi = 2200  # 현재 코스피
-   peak_kospi = 3200     # 최고점 코스피
-   
-   level, decline, action = crisis_system.assess_market_crash_level(current_kospi, peak_kospi)
-   print(f"위기 수준: {level}")
-   print(f"하락률: {decline:.1f}%")
-   print(f"권장 행동: {action}")
-   
-   # 24시간 프로토콜 실행
-   protocol = crisis_24hour_protocol()
-   for timeframe, actions in protocol.items():
-       print(f"\n{timeframe}:")
-       for action in actions:
-           print(f"  {action}")
-   ```
-   
-   위기 매수 실전 가이드:
-   - 코스피 -30% 이상 급락 시 단계적 매수 (코드로 자동화)
-   - 우량주 PER 10배 이하 구간 집중 투자 (알고리즘 활용)
-   - 공포 지수 극값에서 역발상 투자 (VIX 기반 자동 신호)
-   - 언론의 공포 기사 횟수로 바닥 판단 (감정 지표 추적)
+   - 코스피 -30% 이상 급락 시 단계적 매수
+   - 우량주 PER 10배 이하 구간 집중 투자
+   - 공포 지수 극값에서 역발상 투자
+   - 언론의 공포 기사 횟수로 바닥 판단
 
 3. **회복장 수익 극대화**: 위기 이후 반등 최대 활용
-   ```python
-   # 회복장 섹터 로테이션 자동화
-   class RecoveryRotationStrategy:
-       def __init__(self):
-           self.recovery_phases = {
-               'phase_1_defensive': {
-                   'duration': '0-3개월',
-                   'sectors': ['유틸리티', '필수소비재', '헬스케어'],
-                   'etfs': ['KODEX 유틸리티', 'TIGER 필수소비재']
-               },
-               'phase_2_financial': {
-                   'duration': '3-6개월', 
-                   'sectors': ['금융', '부동산'],
-                   'etfs': ['KODEX 은행', 'TIGER 리츠']
-               },
-               'phase_3_cyclical': {
-                   'duration': '6-12개월',
-                   'sectors': ['산업재', '소재'],
-                   'etfs': ['KODEX 철강', 'TIGER 화학']
-               },
-               'phase_4_growth': {
-                   'duration': '12개월+',
-                   'sectors': ['기술', '소비자재량'],
-                   'etfs': ['KODEX 반도체', 'TIGER 2차전지']
-               }
-           }
-       
-       def determine_recovery_phase(self, months_since_bottom):
-           """회복 단계 판단"""
-           if months_since_bottom <= 3:
-               return 'phase_1_defensive'
-           elif months_since_bottom <= 6:
-               return 'phase_2_financial'
-           elif months_since_bottom <= 12:
-               return 'phase_3_cyclical'
-           else:
-               return 'phase_4_growth'
-       
-       def get_rotation_strategy(self, current_phase):
-           """단계별 로테이션 전략"""
-           phase_info = self.recovery_phases[current_phase]
-           
-           strategy = {
-               'recommended_sectors': phase_info['sectors'],
-               'recommended_etfs': phase_info['etfs'],
-               'duration': phase_info['duration'],
-               'allocation': self.get_allocation_strategy(current_phase)
-           }
-           
-           return strategy
-       
-       def get_allocation_strategy(self, phase):
-           """단계별 자산 배분"""
-           allocations = {
-               'phase_1_defensive': {'주식': 60, '채권': 30, '현금': 10},
-               'phase_2_financial': {'주식': 70, '채권': 20, '현금': 10},
-               'phase_3_cyclical': {'주식': 80, '채권': 15, '현금': 5},
-               'phase_4_growth': {'주식': 85, '채권': 10, '현금': 5}
-           }
-           
-           return allocations[phase]
-   ```
-   
-   회복장 전략:
-   - 업종 순환 투자 (방어 → 성장 → 경기민감) - 단계별 자동화
-   - 레버리지 ETF 단기 활용 - 위험 관리 알고리즘
-   - 옵션을 활용한 상승 베팅 - 체계적 접근법  
-   - 회복 속도에 따른 차별적 투자 - 데이터 기반 판단
+   - 업종 순환 투자 (방어 → 성장 → 경기민감)
+   - 레버리지 ETF 단기 활용
+   - 옵션을 활용한 상승 베팅
+   - 회복 속도에 따른 차별적 투자
 
 💪 **위기 기회 마스터 미션**
 - 과거 위기 상황 시뮬레이션 투자

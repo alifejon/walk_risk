@@ -1,3 +1,1 @@
-"""
-Data management and market integration modules
-"""
+"""Data management and market data sources"""

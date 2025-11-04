@@ -1,3 +1,1 @@
-"""
-Game state management system
-"""
+"""Game state management"""

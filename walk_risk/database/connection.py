@@ -31,15 +31,21 @@ class Database:
             # Default to SQLite for development
             database_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./walk_risk.db")
 
+        # Convert Railway's postgresql:// to postgresql+asyncpg:// for SQLAlchemy async
+        if database_url.startswith("postgresql://"):
+            database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif database_url.startswith("postgres://"):
+            database_url = database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+
         self.database_url = database_url
-        self.engine = None
+        self._engine = None
         self.session_maker = None
 
     async def connect(self):
         """Connect to database"""
         try:
             # Create async engine
-            self.engine = create_async_engine(
+            self._engine = create_async_engine(
                 self.database_url,
                 echo=os.getenv("SQL_DEBUG", "false").lower() == "true",
                 pool_pre_ping=True,
@@ -48,13 +54,13 @@ class Database:
 
             # Create session maker
             self.session_maker = async_sessionmaker(
-                bind=self.engine,
+                bind=self._engine,
                 class_=AsyncSession,
                 expire_on_commit=False
             )
 
             # Test connection
-            async with self.engine.begin() as conn:
+            async with self._engine.begin() as conn:
                 await conn.run_sync(lambda sync_conn: None)
 
             logger.info(f"Connected to database: {self.database_url}")
@@ -65,16 +71,16 @@ class Database:
 
     async def disconnect(self):
         """Disconnect from database"""
-        if self.engine:
-            await self.engine.dispose()
+        if self._engine:
+            await self._engine.dispose()
             logger.info("Disconnected from database")
 
     async def create_tables(self):
         """Create all tables"""
-        if not self.engine:
+        if not self._engine:
             raise RuntimeError("Database not connected")
 
-        async with self.engine.begin() as conn:
+        async with self._engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
         logger.info("Database tables created")

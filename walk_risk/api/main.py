@@ -45,6 +45,9 @@ async def lifespan(app: FastAPI):
         # 데이터베이스 연결
         await database.connect()
 
+        # 테이블 생성 (없으면 생성)
+        await database.create_tables()
+
         # 게임 매니저 초기화
         game_manager = GameManager()
 

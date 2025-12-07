@@ -201,7 +201,7 @@ async def get_player_stats(
     db: Annotated[AsyncSession, Depends(get_db)]
 ):
     """플레이어 통계 조회"""
-    from sqlalchemy import select, func
+    from sqlalchemy import select, func, Integer
     from ...database.models import PuzzleProgress, Portfolio
 
     # 퍼즐 통계
@@ -244,7 +244,8 @@ async def get_leaderboard(
     db: Annotated[AsyncSession, Depends(get_db)],
     period: str = "weekly",
     metric: str = "xp",
-    limit: int = 10
+    limit: int = 10,
+    offset: int = 0
 ):
     """리더보드 조회"""
     from sqlalchemy import select, desc
@@ -257,13 +258,13 @@ async def get_leaderboard(
     else:
         order_by = desc(User.experience)
 
-    stmt = select(User).order_by(order_by).limit(limit)
+    stmt = select(User).order_by(order_by).offset(offset).limit(limit)
     result = await db.execute(stmt)
     top_users = result.scalars().all()
 
     leaderboard = [
         {
-            "rank": idx + 1,
+            "rank": offset + idx + 1,
             "user_id": user.id,
             "username": user.username,
             "score": user.experience if metric == "xp" else user.level,
@@ -287,5 +288,93 @@ async def get_leaderboard(
             "score": current_user.experience if metric == "xp" else current_user.level
         },
         "period": period,
-        "metric": metric
+        "metric": metric,
+        "pagination": {
+            "offset": offset,
+            "limit": limit
+        }
     }
+
+
+@router.delete("/me")
+async def delete_current_player(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)]
+):
+    """현재 사용자 계정 삭제 (비활성화)"""
+    await db.delete(current_user)
+    await db.commit()
+
+    return {"message": "계정이 삭제되었습니다", "user_id": current_user.id}
+
+
+@router.get("/search")
+async def search_players(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    username: Optional[str] = None,
+    current_class: Optional[str] = None,
+    min_level: Optional[int] = None,
+    limit: int = 20
+):
+    """플레이어 검색"""
+    from sqlalchemy import select
+
+    stmt = select(User)
+
+    if username:
+        stmt = stmt.where(User.username.ilike(f"%{username}%"))
+    if current_class:
+        stmt = stmt.where(User.current_class == current_class)
+    if min_level:
+        stmt = stmt.where(User.level >= min_level)
+
+    stmt = stmt.limit(limit)
+    result = await db.execute(stmt)
+    users = result.scalars().all()
+
+    return {
+        "results": [
+            {
+                "user_id": user.id,
+                "username": user.username,
+                "level": user.level,
+                "current_class": user.current_class
+            }
+            for user in users
+        ],
+        "count": len(users)
+    }
+
+
+class PublicPlayerResponse(BaseModel):
+    id: str
+    username: str
+    level: int
+    current_class: str
+    unlocked_skills: List[str]
+
+
+@router.get("/{player_id}", response_model=PublicPlayerResponse)
+async def get_player_profile(
+    player_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)]
+):
+    """다른 플레이어 공개 프로필 조회"""
+    from sqlalchemy import select
+
+    stmt = select(User).where(User.id == player_id)
+    result = await db.execute(stmt)
+    player = result.scalar_one_or_none()
+
+    if not player:
+        raise HTTPException(status_code=404, detail="플레이어를 찾을 수 없습니다")
+
+    return PublicPlayerResponse(
+        id=player.id,
+        username=player.username,
+        level=player.level,
+        current_class=player.current_class,
+        unlocked_skills=player.unlocked_skills
+    )

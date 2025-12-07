@@ -1,6 +1,6 @@
 """Portfolio Service - 포트폴리오 관리 서비스"""
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, TYPE_CHECKING
 from datetime import datetime
 import uuid
 
@@ -9,19 +9,41 @@ from ..models.portfolio.real_portfolio import RealPortfolio
 from ..models.portfolio.assets import Asset, Position
 from ..core.trading.order_system import OrderSystem, Order, OrderType, OrderSide
 
+if TYPE_CHECKING:
+    from .market_service import MarketService
+
 
 class PortfolioService(BaseService):
     """포트폴리오 관련 비즈니스 로직을 처리하는 서비스"""
 
-    def __init__(self):
+    def __init__(self, market_service: Optional["MarketService"] = None):
         super().__init__()
         self.order_system = OrderSystem()
+        self.market_service = market_service
 
         # 플레이어별 포트폴리오
         self.portfolios: Dict[str, RealPortfolio] = {}
 
         # 거래 내역
         self.trade_history: Dict[str, List[Dict[str, Any]]] = {}
+
+        # 폴백용 가격 캐시 (MarketService 없을 때 사용)
+        self._fallback_prices: Dict[str, float] = {
+            "005930.KS": 75000,
+            "000660.KS": 95000,
+            "035420.KS": 180000,
+            "051910.KS": 420000,
+            "207940.KS": 820000,
+            "006400.KS": 650000,
+            "028260.KS": 120000,
+            "068270.KS": 180000,
+            "005380.KS": 245000,
+            "035720.KS": 55000,
+        }
+
+    def set_market_service(self, market_service: "MarketService"):
+        """MarketService 설정 (의존성 주입)"""
+        self.market_service = market_service
 
     async def _setup(self):
         """서비스 초기화"""
@@ -355,26 +377,45 @@ class PortfolioService(BaseService):
                 del portfolio.positions[symbol]
 
     async def _get_current_price(self, symbol: str) -> float:
-        """현재 주가 조회 (모의 구현)"""
-        # TODO: 실제 마켓 데이터 서비스와 연동
-        # 현재는 고정값 반환
-        mock_prices = {
-            "005930.KS": 75000,  # 삼성전자
-            "000660.KS": 55000,  # SK하이닉스
-            "035420.KS": 320000, # NAVER
-            "051910.KS": 850000, # LG화학
-        }
-        return mock_prices.get(symbol, 10000)
+        """현재 주가 조회 - MarketService 연동"""
+        # MarketService가 있으면 실시간 시세 조회
+        if self.market_service:
+            try:
+                quote_result = await self.market_service.get_quote(symbol)
+                if quote_result.get("success"):
+                    price = quote_result["data"].get("current_price")
+                    if price:
+                        # 캐시 업데이트
+                        self._fallback_prices[symbol] = price
+                        return price
+            except Exception as e:
+                self.logger.warning(f"MarketService 시세 조회 실패 ({symbol}): {e}")
+
+        # 폴백: 캐시된 가격 사용
+        return self._fallback_prices.get(symbol, 10000)
 
     async def _get_symbol_name(self, symbol: str) -> str:
-        """종목명 조회"""
-        names = {
+        """종목명 조회 - MarketService 연동"""
+        # MarketService가 있으면 캐시에서 조회
+        if self.market_service and hasattr(self.market_service, 'symbols_cache'):
+            symbol_info = self.market_service.symbols_cache.get(symbol)
+            if symbol_info:
+                return symbol_info.get("name", symbol)
+
+        # 폴백: 기본 종목명
+        fallback_names = {
             "005930.KS": "삼성전자",
             "000660.KS": "SK하이닉스",
             "035420.KS": "NAVER",
             "051910.KS": "LG화학",
+            "207940.KS": "삼성바이오로직스",
+            "006400.KS": "삼성SDI",
+            "028260.KS": "삼성물산",
+            "068270.KS": "셀트리온",
+            "005380.KS": "현대차",
+            "035720.KS": "카카오",
         }
-        return names.get(symbol, symbol)
+        return fallback_names.get(symbol, symbol)
 
     def _get_position_info(self, portfolio: RealPortfolio, symbol: str) -> Optional[Dict[str, Any]]:
         """포지션 정보 반환"""

@@ -1,207 +1,195 @@
 # Walk Risk 개발 로드맵 - 다음 단계
 
-## 🎯 즉시 시작할 작업 (다음 세션)
+**최종 업데이트**: 2025-12-07
 
-### 1. 기존 시스템 통합 (우선순위: 최고)
+## 📊 현재 진행 상황
 
-#### A. 튜토리얼과 퍼즐 시스템 연결
-```python
-# 구현할 파일: walk_risk/tutorials/puzzle_tutorial.py
-# 목표: 튜토리얼에서 첫 번째 퍼즐 체험
+### 완료된 작업 (Week 1-6)
 
-class PuzzleTutorial:
-    def __init__(self, tutorial_manager, puzzle_engine):
-        # 기존 튜토리얼 매니저와 새 퍼즐 엔진 연결
-        
-    async def first_puzzle_experience(self, player):
-        # 1. 간단한 퍼즐 제시 (초급 난이도)
-        # 2. 가이드된 단서 수집 (버핏 멘토가 힌트 제공)
-        # 3. 가설 수립 도움
-        # 4. 검증 과정 설명
-```
+| 주차 | 목표 | 상태 | 주요 성과 |
+|------|------|------|----------|
+| Week 1 | 서비스 레이어 | ✅ 완료 | FastAPI + 서비스 모듈 구조화 |
+| Week 2 | 백엔드 인프라 | ✅ 완료 | SQLAlchemy + JWT 인증 |
+| Week 3 | API 완성 | ✅ 완료 | 전체 CRUD + 실시간 시세 연동 |
+| Week 4 | 웹 클라이언트 | ✅ 완료 | React + TypeScript MVP |
+| Week 5 | 인프라 & 배포 | ✅ 완료 | Docker + CI/CD + 환경 설정 |
+| Week 6 | 베타 준비 | ✅ 완료 | PWA + SEO + UI/UX 컴포넌트 |
 
-#### B. 버핏 멘토 업그레이드
-```python
-# 수정할 파일: walk_risk/ai/mentor_personas.py
-# 목표: 퍼즐 힌트 제공 기능 추가
+### 구현 완료된 기능
 
-class BuffettMentor:
-    def give_puzzle_hint(self, puzzle, discovered_clues):
-        # 현재 진행 상황에 맞는 힌트 제공
-        # "아직 재무제표를 확인하지 않았군요..."
-        
-    def validate_hypothesis(self, hypothesis):
-        # 플레이어 가설에 대한 버핏식 조언
-        # "그 가설은 흥미롭군요. 하지만 한 가지 놓친 게 있습니다..."
-```
+#### 백엔드 (FastAPI)
+- [x] 회원가입/로그인 (JWT access + refresh token)
+- [x] 플레이어 CRUD + 통계 + 리더보드
+- [x] 퍼즐 CRUD + 힌트 + 가설 제출
+- [x] 포트폴리오 관리 + 실시간 시세
+- [x] MarketService (Yahoo Finance 연동)
+- [x] MentorService (5명 멘토 시스템)
 
-#### C. 실시간 데이터 연동
-```python
-# 수정할 파일: walk_risk/data/market_data/yahoo_finance.py  
-# 목표: 실제 시장 이벤트 자동 퍼즐화
-
-class MarketEventDetector:
-    def detect_puzzle_worthy_events(self):
-        # 급락(-5% 이상), 급등(+5% 이상), 변동성(일평균 3배 이상) 감지
-        # 자동으로 퍼즐 생성 트리거
-        
-    def create_real_time_puzzle(self, market_event):
-        # 실제 시장 데이터로 퍼즐 생성
-        # 뉴스, 재무 데이터, 업종 동향 등 실제 단서 활용
-```
-
-### 2. 퍼즐 콘텐츠 확장 (우선순위: 높음)
-
-#### A. 다양한 시나리오 추가
-```python
-# 추가할 파일: walk_risk/core/risk_puzzle/scenarios/
-├── market_crash_scenarios.py      # 폭락 시나리오
-├── bubble_scenarios.py            # 버블 시나리오  
-├── earnings_scenarios.py          # 실적 발표 시나리오
-├── macro_event_scenarios.py       # 거시경제 이벤트
-└── sector_rotation_scenarios.py   # 섹터 로테이션
-
-# 각 시나리오별 특화된 단서와 함정 추가
-```
-
-#### B. 업종별 특화 퍼즐
-```python
-# 구현 예시: 반도체 업종 특화 퍼즐
-class SemiconductorPuzzle:
-    def __init__(self):
-        self.specialized_clues = [
-            "메모리 반도체 가격 동향",
-            "파운드리 수주 현황", 
-            "중국 반도체 정책",
-            "AI 수요 증감"
-        ]
-```
-
-### 3. UI/UX 개선 (우선순위: 중간)
-
-#### A. 단서 수집 시각화
-```python
-# 구현할 기능
-- 단서 수집 진행도 바
-- 에너지 게이지 애니메이션  
-- 단서 연결 네트워크 다이어그램
-- 가설 정확도 실시간 피드백
-```
-
-#### B. 직관적인 인터페이스
-```python
-# 개선할 UI 요소
-- 드래그&드롭으로 단서 연결
-- 시각적 가설 작성 도구
-- 진행 상황 대시보드
-- 스킬 성장 시각화
-```
-
-## 📅 1주차 개발 계획
-
-### Day 1-2: 기존 시스템 통합
-- [ ] `tutorial_manager.py`에 퍼즐 단계 추가
-- [ ] 버핏 멘토에 퍼즐 힌트 기능 구현
-- [ ] 기본 통합 테스트 완료
-
-### Day 3-4: 실시간 데이터 연동
-- [ ] 시장 이벤트 감지 시스템 구현
-- [ ] Yahoo Finance 데이터로 실제 퍼즐 생성
-- [ ] 실시간 퍼즐 자동 생성 테스트
-
-### Day 5-7: 콘텐츠 확장 및 밸런싱
-- [ ] 5가지 기본 시나리오 구현
-- [ ] 난이도별 퍼즐 밸런싱
-- [ ] 통합 테스트 및 버그 수정
-
-## 🗓️ 1개월 로드맵
-
-### Week 1: 핵심 통합 (위 내용)
-### Week 2: 멀티 멘토 시스템
-- Peter Lynch (성장주 전문)
-- Benjamin Graham (가치투자)  
-- Ray Dalio (거시경제)
-- Cathie Wood (혁신 기술)
-
-### Week 3: 고급 퍼즐 메커니즘
-- 연속 퍼즐 (여러 이벤트 연결)
-- 시간 제한 퍼즐
-- 선택의 결과가 다음 퍼즐에 영향
-
-### Week 4: 폴리싱 및 최적화
-- 성능 최적화
-- UI/UX 개선
-- 버그 수정 및 안정화
-
-## 🎮 핵심 개발 원칙
-
-### 1. 항상 "왜 재미있는가?" 질문하기
-- 모든 기능이 플레이어의 호기심을 자극하는가?
-- 성취감을 느낄 수 있는가?
-- 더 하고 싶게 만드는가?
-
-### 2. 교육 효과 우선
-- 실제 투자에 도움이 되는가?
-- 잘못된 투자 습관을 조장하지 않는가?
-- 리스크 관리 중요성을 강조하는가?
-
-### 3. 확장성 고려
-- 새로운 퍼즐 타입 추가가 쉬운가?
-- 다양한 시장(해외, 암호화폐 등) 지원 가능한가?
-- 멀티플레이어 확장 가능한가?
-
-## 🚨 주의사항 및 함정
-
-### 1. 과도한 복잡성 경계
-- 퍼즐이 너무 복잡해져서 초보자가 포기하지 않도록
-- 단계적 학습 곡선 유지
-- 실패해도 재미있어야 함
-
-### 2. 실제 투자와의 괴리 방지
-- 게임의 단순화가 현실 왜곡으로 이어지지 않도록
-- 시뮬레이션의 한계 명확히 표시
-- 실제 투자 전 추가 학습 필요성 강조
-
-### 3. 중독성 vs 건전성
-- 도박적 요소 완전 배제
-- 장기적 사고 방식 강화
-- 감정적 의사결정 경계 교육
-
-## 💾 중요한 백업 파일들
-
-### 필수 백업 대상
-```
-walk_risk/core/risk_puzzle/          # 오늘 구현한 핵심 시스템
-docs/development_log_2025_08_03.md  # 오늘의 작업 기록
-risk_puzzle_auto_demo.py             # 작동하는 데모
-```
-
-### 다음 작업 시 우선 확인
-1. 기존 데모들이 여전히 작동하는지 확인
-2. 새로운 퍼즐 시스템과 기존 시스템 충돌 여부 확인  
-3. 실시간 데이터 연동 시 API 제한 확인
-
-## 📝 다음 세션 시작 가이드
-
-### 1. 환경 확인
-```bash
-cd /Users/alifejon/Documents/GitHub/walk_risk
-uv sync
-uv run python risk_puzzle_auto_demo.py  # 작동 확인
-```
-
-### 2. 우선순위 작업 시작
-```bash
-# 1. 튜토리얼 통합부터 시작
-cp walk_risk/tutorials/tutorial_manager.py walk_risk/tutorials/tutorial_manager_backup.py
-# 안전하게 백업 후 수정 시작
-```
-
-### 3. 개발 방향 확인
-- 이 문서의 "즉시 시작할 작업" 섹션 참조
-- 각 기능이 왜 필요한지 다시 한 번 검토
-- 플레이어 관점에서 재미있는지 계속 확인
+#### 프론트엔드 (React)
+- [x] 로그인/회원가입 (멘토 선택)
+- [x] 대시보드 (통계, 퀵 액션)
+- [x] 퍼즐 해결 인터페이스
+- [x] 포트폴리오 관리 화면
+- [x] JWT 토큰 자동 갱신
 
 ---
 
-*이 로드맵은 Walk Risk가 진정한 "투자 학습 게임"으로 완성되기 위한 명확한 경로를 제시합니다. 각 단계마다 "왜 재미있는가?"와 "실제로 도움이 되는가?"를 끊임없이 질문하며 개발하세요.*
+## 🎯 완료된 작업 (Week 5-6)
+
+### Week 5: 인프라 & 배포 ✅
+
+#### 컨테이너화 & CI/CD
+- [x] Dockerfile 작성 (backend + frontend)
+- [x] docker-compose.yml (개발 환경)
+- [x] GitHub Actions 워크플로우
+  - [x] 자동 테스트 (pytest)
+  - [x] 자동 빌드 (npm build)
+  - [x] 자동 배포 파이프라인
+
+#### 환경 설정
+- [x] .env.development / .env.production 분리
+- [x] Health check 엔드포인트 (/, /ready, /live)
+
+### Week 6: 베타 테스트 준비 ✅
+
+#### 프로덕션 준비
+- [x] PWA 설정 (manifest.json, service worker)
+- [x] SEO 메타 태그 (OG, Twitter Card)
+- [x] 스켈레톤 로딩 UI
+- [x] 에러 바운더리
+- [x] 토스트 알림 시스템
+
+---
+
+## 🚀 다음 단계: 베타 런칭
+
+### 즉시 필요 작업
+- [ ] 아이콘 에셋 생성 (web-ui/public/icons/)
+- [ ] OG 이미지 생성 (og-image.png)
+- [ ] 클라우드 배포
+  - [ ] 백엔드: Railway 또는 Render
+  - [ ] 프론트엔드: Vercel
+  - [ ] 데이터베이스: Supabase (PostgreSQL)
+
+### 베타 테스트 실행
+- [ ] 테스트 사용자 모집 (투자 커뮤니티)
+- [ ] 피드백 수집 폼 (Google Forms 또는 Tally)
+- [ ] Sentry 에러 추적 연동
+
+---
+
+## 🛠️ 기술적 TODO
+
+### 높은 우선순위
+1. **환경 설정 분리**
+   - `.env.development` / `.env.production`
+   - API URL 환경별 설정
+
+2. **에러 처리 개선**
+   - 프론트엔드 에러 바운더리
+   - API 에러 메시지 한국어화
+
+3. **보안 강화**
+   - JWT 시크릿 환경 변수화
+   - CORS 프로덕션 설정
+   - Rate limiting
+
+### 중간 우선순위
+4. **테스트 커버리지**
+   - 핵심 API 테스트 완성
+   - 프론트엔드 컴포넌트 테스트
+
+5. **성능 최적화**
+   - React Query 캐싱 활용
+   - API 응답 캐싱 (Redis)
+
+6. **UX 개선**
+   - 스켈레톤 로딩
+   - 토스트 알림
+
+### 낮은 우선순위
+7. **추가 기능**
+   - 비밀번호 재설정
+   - 소셜 로그인 (Google/Kakao)
+   - 다크/라이트 모드 전환
+
+---
+
+## 📁 프로젝트 구조 (현재)
+
+```
+walk_risk/
+├── api_server.py              # FastAPI 진입점
+├── walk_risk/
+│   ├── api/
+│   │   ├── main.py           # FastAPI 앱
+│   │   └── routers/          # API 라우터
+│   ├── auth/                 # JWT 인증
+│   ├── database/             # SQLAlchemy 모델
+│   ├── services/             # 비즈니스 로직
+│   ├── ai/                   # 멘토 시스템
+│   └── core/                 # 핵심 게임 로직
+├── web-ui/                   # React 프론트엔드
+│   ├── src/
+│   │   ├── api/             # API 클라이언트
+│   │   ├── pages/           # 페이지 컴포넌트
+│   │   ├── stores/          # Zustand 상태
+│   │   └── components/      # UI 컴포넌트
+│   └── dist/                # 빌드 결과물
+└── tests/                    # pytest 테스트
+```
+
+---
+
+## 🚀 실행 가이드
+
+### 개발 환경
+```bash
+# 백엔드 (터미널 1)
+cd /Users/alifejon/Documents/GitHub/walk_risk
+uv run python api_server.py
+
+# 프론트엔드 (터미널 2)
+cd web-ui
+npm run dev
+```
+
+### 접속 주소
+- **프론트엔드**: http://localhost:5173
+- **백엔드 API**: http://localhost:8000
+- **API 문서**: http://localhost:8000/docs
+
+---
+
+## 📈 성공 지표 (베타)
+
+| 지표 | 목표 |
+|------|------|
+| 회원가입 | 50명+ |
+| 일일 활성 사용자 | 10명+ |
+| 퍼즐 완료율 | 60%+ |
+| 평균 세션 시간 | 10분+ |
+| NPS 점수 | 7점+ |
+
+---
+
+## 💡 향후 확장 계획 (Post-MVP)
+
+### Phase 2: 소셜 기능
+- 플레이어 간 리더보드
+- 친구 시스템
+- 협동 퍼즐
+
+### Phase 3: 고급 기능
+- 실시간 시장 이벤트 기반 퍼즐 자동 생성
+- 멀티 멘토 조언 비교
+- 백테스팅 시뮬레이션
+
+### Phase 4: 모바일
+- React Native 또는 Flutter
+- 푸시 알림
+- 오프라인 모드
+
+---
+
+*마지막 업데이트: 2025-12-07 - Week 4 완료, Week 5-6 계획 수립*

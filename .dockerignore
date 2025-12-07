@@ -1,0 +1,63 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv
+venv
+ENV
+.eggs
+*.egg-info
+*.egg
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.nox
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Demo files
+*_demo.py
+*_demo.md
+
+# Local data
+*.db
+*.sqlite3
+data/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (frontend has its own .dockerignore)
+node_modules/
+
+# Build artifacts
+dist/
+build/

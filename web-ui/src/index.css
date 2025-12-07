@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Noto Sans KR', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #ffffff;
+  background-color: #0D0D1A;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #0D0D1A 100%);
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Neon glow utilities */
+.neon-text {
+  text-shadow:
+    0 0 7px #00F5FF,
+    0 0 10px #00F5FF,
+    0 0 21px #00F5FF;
+}
+
+.neon-text-pink {
+  text-shadow:
+    0 0 7px #FF00FF,
+    0 0 10px #FF00FF,
+    0 0 21px #FF00FF;
+}
+
+.neon-text-green {
+  text-shadow:
+    0 0 7px #39FF14,
+    0 0 10px #39FF14,
+    0 0 21px #39FF14;
+}
+
+/* Glass card effect */
+.glass-card {
+  background: rgba(26, 26, 46, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 245, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Neon button */
+.neon-button {
+  background: transparent;
+  border: 2px solid #00F5FF;
+  color: #00F5FF;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.neon-button:hover {
+  background: rgba(0, 245, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+}
+
+.neon-button:active {
+  transform: scale(0.98);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0D0D1A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1A1A2E;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00F5FF;
+}

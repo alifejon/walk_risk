@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+
+    <!-- Primary Meta Tags -->
+    <title>언락: 리스크 마스터 - 투자 리스크 학습 게임</title>
+    <meta name="title" content="언락: 리스크 마스터 - 투자 리스크 학습 게임" />
+    <meta name="description" content="실제 시장 데이터로 투자 리스크를 퍼즐처럼 풀어보는 게임형 학습 플랫폼. 버핏, 린치, 그레이엄 등 전설적인 투자자들의 멘토링과 함께!" />
+    <meta name="keywords" content="투자, 리스크 관리, 주식, 금융 교육, 게임, 퍼즐, 버핏, 린치" />
+    <meta name="author" content="Walk Risk Team" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://walkrisk.com/" />
+    <meta property="og:title" content="언락: 리스크 마스터 - 투자 리스크 학습 게임" />
+    <meta property="og:description" content="실제 시장 데이터로 투자 리스크를 퍼즐처럼 풀어보는 게임형 학습 플랫폼" />
+    <meta property="og:image" content="https://walkrisk.com/og-image.png" />
+    <meta property="og:locale" content="ko_KR" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://walkrisk.com/" />
+    <meta property="twitter:title" content="언락: 리스크 마스터" />
+    <meta property="twitter:description" content="투자 리스크를 퍼즐처럼 풀어보세요" />
+    <meta property="twitter:image" content="https://walkrisk.com/og-image.png" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#00ff88" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="리스크 마스터" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔍</text></svg>" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
+
+    <!-- Preconnect to API -->
+    <link rel="preconnect" href="http://localhost:8000" />
+    <link rel="dns-prefetch" href="http://localhost:8000" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered:', registration.scope);
+            })
+            .catch((error) => {
+              console.log('SW registration failed:', error);
+            });
+        });
+      }
+    </script>
+
+    <!-- No-JS Fallback -->
+    <noscript>
+      <div style="padding: 2rem; text-align: center; background: #0a0a0f; color: #fff; min-height: 100vh;">
+        <h1>언락: 리스크 마스터</h1>
+        <p>이 애플리케이션을 사용하려면 JavaScript를 활성화해야 합니다.</p>
+      </div>
+    </noscript>
+  </body>
+</html>

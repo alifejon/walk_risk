@@ -48,13 +48,16 @@ async def lifespan(app: FastAPI):
         # 게임 매니저 초기화
         game_manager = GameManager()
 
-        # 서비스들 초기화
+        # 서비스들 초기화 (의존성 순서대로)
+        # 1. 기본 서비스들 먼저 생성
+        services["market"] = MarketService()
+        services["mentor"] = MentorService()
+
+        # 2. 의존성 있는 서비스들 생성
         services["player"] = PlayerService(game_manager)
         services["puzzle"] = PuzzleService()
-        services["mentor"] = MentorService()
         services["tutorial"] = TutorialService(game_manager)
-        services["portfolio"] = PortfolioService()
-        services["market"] = MarketService()
+        services["portfolio"] = PortfolioService(market_service=services["market"])
 
         # 모든 서비스 초기화
         for service_name, service in services.items():
@@ -112,12 +115,51 @@ def create_app() -> FastAPI:
     # 헬스체크 엔드포인트
     @app.get("/health")
     async def health_check():
-        """API 헬스체크"""
+        """API 헬스체크 - 기본 상태 확인"""
+        from datetime import datetime, timezone
         return {
             "status": "healthy",
-            "timestamp": "2025-09-30T16:00:00Z",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "version": "1.0.0"
         }
+
+    @app.get("/health/ready")
+    async def readiness_check():
+        """Readiness probe - 서비스 준비 상태 확인"""
+        from datetime import datetime, timezone
+
+        checks = {
+            "database": False,
+            "services": False
+        }
+
+        # 데이터베이스 연결 확인
+        try:
+            from ..database.connection import database
+            if database._engine is not None:
+                checks["database"] = True
+        except Exception:
+            pass
+
+        # 서비스 초기화 확인
+        try:
+            if hasattr(app.state, 'services') and app.state.services:
+                checks["services"] = True
+        except Exception:
+            pass
+
+        all_healthy = all(checks.values())
+
+        return {
+            "status": "ready" if all_healthy else "not_ready",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "checks": checks
+        }
+
+    @app.get("/health/live")
+    async def liveness_check():
+        """Liveness probe - 프로세스 생존 확인"""
+        return {"status": "alive"}
 
     # 루트 엔드포인트
     @app.get("/")

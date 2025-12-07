@@ -1,18 +1,97 @@
 """Mentor Personas - 멘토 페르소나"""
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, TYPE_CHECKING
 from enum import Enum
 import random
 
+if TYPE_CHECKING:
+    from walk_risk.ontology.adapter import WalkRiskOntologyAdapter
+
 
 class BuffettPersona:
-    """워런 버핏 페르소나"""
-    
-    def __init__(self):
+    """워런 버핏 페르소나
+
+    가치투자의 대가 워런 버핏의 투자 철학과 조언 스타일을 구현.
+    온톨로지 연동 시 더 맥락적이고 정확한 조언 제공.
+    """
+
+    def __init__(self, ontology_adapter: Optional["WalkRiskOntologyAdapter"] = None):
         self.name = "Warren Buffett"
         self.title = "가치투자의 거장"
         self.philosophy = "가격은 당신이 지불하는 것이고, 가치는 당신이 얻는 것입니다"
-        
+        self._ontology_adapter = ontology_adapter
+        self._ontology_context: Optional[Dict[str, Any]] = None
+
+        # Load ontology context if adapter is provided
+        if ontology_adapter and ontology_adapter.is_loaded:
+            self._load_ontology_context()
+
+    def _load_ontology_context(self) -> None:
+        """온톨로지에서 버핏 멘토 관련 컨텍스트 로드"""
+        if not self._ontology_adapter:
+            return
+
+        try:
+            self._ontology_context = self._ontology_adapter.get_mentor_philosophy(
+                "WarrenBuffett"
+            )
+        except Exception:
+            self._ontology_context = None
+
+    def get_ontology_enhanced_hint(
+        self,
+        puzzle_data: Dict[str, Any],
+        risk_type: Optional[str] = None,
+    ) -> Optional[str]:
+        """온톨로지 기반 맥락적 힌트 생성
+
+        Args:
+            puzzle_data: 퍼즐 데이터
+            risk_type: 리스크 유형 (예: "MarketRisk", "CreditRisk")
+
+        Returns:
+            온톨로지 기반 힌트 또는 None
+        """
+        if not self._ontology_context:
+            return None
+
+        hints = []
+
+        # 버핏의 핵심 개념 기반 힌트
+        concepts = self._ontology_context.get("concepts", [])
+        concept_names = [c.get("label", "") for c in concepts if c.get("label")]
+
+        if concept_names:
+            hints.append(
+                f"💡 가치투자의 핵심 개념을 적용해보세요: "
+                f"{', '.join(concept_names[:3])}"
+            )
+
+        # 버핏이 사용하는 지표 기반 힌트
+        indicators = self._ontology_context.get("indicators", [])
+        indicator_names = [i.get("label", "") for i in indicators if i.get("label")]
+
+        if indicator_names and puzzle_data.get("has_financial_data"):
+            hints.append(
+                f"📊 다음 지표들을 확인해보세요: "
+                f"{', '.join(indicator_names[:2])}"
+            )
+
+        # 리스크 전문 분야 기반 힌트
+        if risk_type:
+            risk_expertise = self._ontology_context.get("risk_expertise", [])
+            risk_names = [r.get("label", "") for r in risk_expertise]
+
+            if any(risk_type.lower() in r.lower() for r in risk_names):
+                hints.append(
+                    f"⚠️ 이 유형의 리스크는 제가 잘 알고 있습니다. "
+                    f"함께 분석해봅시다."
+                )
+
+        if hints:
+            return "\n".join(hints)
+        return None
+
     def get_greeting(self) -> str:
         return f"🏛️ {self.name}: 함께 가치투자의 세계를 탐험해보겠습니다."
         
@@ -1378,3 +1457,394 @@ class StepByStepAnalysis:
 
 🔬 더욱 세밀한 분석과 시나리오 플래닝을 진행합니다.
         """.strip()
+
+
+class GrowthFeedbackSystem:
+    """플레이어 성장 피드백 시스템 - 성장감 극대화"""
+
+    # 레벨별 칭호
+    LEVEL_TITLES = {
+        1: "초보 투자자",
+        2: "견습 분석가",
+        3: "주니어 분석가",
+        4: "분석가",
+        5: "시니어 분석가",
+        6: "리스크 스카우트",
+        7: "리스크 헌터",
+        8: "리스크 전문가",
+        9: "리스크 마스터",
+        10: "시장 통찰자",
+        11: "시장 해석가",
+        12: "트렌드 리더",
+        13: "베테랑 투자자",
+        14: "엘리트 투자자",
+        15: "마스터 투자자",
+        16: "투자 전략가",
+        17: "시장 현자",
+        18: "월스트리트 베테랑",
+        19: "투자 레전드",
+        20: "리스크 초월자"
+    }
+
+    # 마일스톤 메시지
+    MILESTONE_MESSAGES = {
+        5: "🎉 레벨 5 달성! 이제 중급 퍼즐에 도전할 수 있습니다!",
+        10: "🏆 레벨 10 달성! 시장 통찰자의 눈을 갖게 되었습니다!",
+        15: "⭐ 레벨 15 달성! 당신은 이제 마스터 투자자입니다!",
+        20: "👑 레벨 20 달성! 리스크 초월자의 경지에 올랐습니다!"
+    }
+
+    def __init__(self, mentor):
+        self.mentor = mentor
+        self.mentor_name = mentor.name if hasattr(mentor, 'name') else "멘토"
+
+    def get_level_up_feedback(self, old_level: int, new_level: int) -> str:
+        """레벨업 피드백 생성"""
+        old_title = self.LEVEL_TITLES.get(old_level, f"레벨 {old_level}")
+        new_title = self.LEVEL_TITLES.get(new_level, f"레벨 {new_level}")
+
+        # 마일스톤 체크
+        milestone_msg = ""
+        for milestone, msg in self.MILESTONE_MESSAGES.items():
+            if old_level < milestone <= new_level:
+                milestone_msg = f"\n\n{msg}"
+                break
+
+        if "Buffett" in self.mentor_name:
+            return f"""
+🏛️ {self.mentor_name}: "축하합니다! 당신은 성장하고 있습니다.
+
+📈 레벨 {old_level} → 레벨 {new_level}
+🎖️ '{old_title}' → '{new_title}'
+
+복리의 힘은 투자에만 적용되는 게 아닙니다.
+당신의 지식도 복리로 성장하고 있어요.
+매일 조금씩 배우면 10년 후에는 전문가가 됩니다.
+
+'위험은 자신이 무엇을 하는지 모르는 데서 온다.'
+당신은 점점 더 많이 알아가고 있습니다."{milestone_msg}
+            """.strip()
+
+        elif "Lynch" in self.mentor_name:
+            return f"""
+📈 {self.mentor_name}: "와! 레벨업이다!
+
+📊 레벨 {old_level} → 레벨 {new_level}
+🎖️ '{old_title}' → '{new_title}'
+
+당신은 점점 더 좋은 투자자가 되고 있어요!
+제가 Magellan 펀드를 처음 맡았을 때도 이렇게 시작했습니다.
+
+일상에서 투자 기회를 찾는 눈이 점점 예리해지고 있네요.
+'아는 것에 투자하라' - 당신은 점점 더 많이 알게 되고 있습니다!"{milestone_msg}
+            """.strip()
+
+        elif "Graham" in self.mentor_name:
+            return f"""
+🎓 {self.mentor_name}: "훌륭한 발전입니다.
+
+📈 레벨 {old_level} → 레벨 {new_level}
+🎖️ '{old_title}' → '{new_title}'
+
+투자 지식의 축적은 안전마진의 확보와 같습니다.
+더 많이 알수록, 더 안전하게 투자할 수 있습니다.
+
+'투자에서 가장 위험한 네 단어는 이번엔 다르다이다.'
+하지만 당신은 다릅니다 - 체계적으로 배우고 있으니까요."{milestone_msg}
+            """.strip()
+
+        elif "Dalio" in self.mentor_name:
+            return f"""
+🌍 {self.mentor_name}: "성장의 증거입니다!
+
+📈 레벨 {old_level} → 레벨 {new_level}
+🎖️ '{old_title}' → '{new_title}'
+
+원칙을 따르는 사람은 반드시 발전합니다.
+실패에서 배우고, 성공을 체계화하는 것이 핵심입니다.
+
+당신의 투자 원칙이 점점 명확해지고 있어요.
+시스템적 사고가 발전하고 있습니다!"{milestone_msg}
+            """.strip()
+
+        elif "Wood" in self.mentor_name:
+            return f"""
+🚀 {self.mentor_name}: "놀라운 성장이에요!
+
+📈 레벨 {old_level} → 레벨 {new_level}
+🎖️ '{old_title}' → '{new_title}'
+
+혁신적 사고방식이 점점 발전하고 있어요!
+미래를 보는 눈이 점점 예리해지고 있습니다.
+
+파괴적 혁신을 이해하는 투자자는 드물어요.
+당신은 그 드문 투자자가 되어가고 있습니다!"{milestone_msg}
+            """.strip()
+
+        return f"""
+레벨업! 레벨 {old_level} → 레벨 {new_level}
+칭호: '{old_title}' → '{new_title}'{milestone_msg}
+        """.strip()
+
+    def get_streak_feedback(self, streak_count: int) -> str:
+        """연속 성공 피드백"""
+        if streak_count < 3:
+            return ""
+
+        streak_messages = {
+            3: "🔥 3연속 성공! 좋은 흐름이에요!",
+            5: "🔥🔥 5연속 성공! 대단한 집중력입니다!",
+            7: "🔥🔥🔥 7연속 성공! 당신은 불타고 있어요!",
+            10: "💎 10연속 성공! 전설적인 기록입니다!"
+        }
+
+        for threshold in sorted(streak_messages.keys(), reverse=True):
+            if streak_count >= threshold:
+                base_msg = streak_messages[threshold]
+                break
+        else:
+            base_msg = f"🔥 {streak_count}연속 성공!"
+
+        if "Buffett" in self.mentor_name:
+            return f"{base_msg}\n🏛️ {self.mentor_name}: '일관성이 천재성을 이깁니다.'"
+        elif "Lynch" in self.mentor_name:
+            return f"{base_msg}\n📈 {self.mentor_name}: '꾸준함이 10배 수익을 만듭니다!'"
+        elif "Graham" in self.mentor_name:
+            return f"{base_msg}\n🎓 {self.mentor_name}: '체계적 접근의 승리입니다.'"
+        elif "Dalio" in self.mentor_name:
+            return f"{base_msg}\n🌍 {self.mentor_name}: '원칙이 결과를 만듭니다.'"
+        elif "Wood" in self.mentor_name:
+            return f"{base_msg}\n🚀 {self.mentor_name}: '혁신적 사고의 연속!'"
+
+        return base_msg
+
+    def get_skill_unlock_feedback(self, skill_name: str) -> str:
+        """스킬 획득 피드백"""
+        if "Buffett" in self.mentor_name:
+            return f"""
+🏛️ {self.mentor_name}: "새로운 능력을 얻었군요!
+
+🎯 획득한 스킬: {skill_name}
+
+이 스킬은 당신의 투자 도구상자에 추가됩니다.
+도구가 많을수록 더 다양한 상황에 대처할 수 있어요.
+
+'기회는 준비된 사람에게 온다.'
+당신은 점점 더 준비되고 있습니다."
+            """.strip()
+
+        elif "Lynch" in self.mentor_name:
+            return f"""
+📈 {self.mentor_name}: "새 스킬 획득!
+
+🎯 획득한 스킬: {skill_name}
+
+이제 당신의 투자 레퍼토리가 넓어졌어요!
+더 많은 투자 기회를 발견할 수 있게 될 겁니다.
+
+소비자 관점에서 시장을 보는 눈이 점점 예리해지고 있어요!"
+            """.strip()
+
+        elif "Graham" in self.mentor_name:
+            return f"""
+🎓 {self.mentor_name}: "스킬 획득을 축하합니다.
+
+🎯 획득한 스킬: {skill_name}
+
+분석 도구가 추가되었습니다.
+정량적 분석에 새로운 차원이 더해졌어요.
+
+'지식은 최고의 안전마진입니다.'"
+            """.strip()
+
+        elif "Dalio" in self.mentor_name:
+            return f"""
+🌍 {self.mentor_name}: "새로운 원칙이 추가되었습니다!
+
+🎯 획득한 스킬: {skill_name}
+
+이 스킬을 당신의 투자 원칙에 통합하세요.
+시스템이 더욱 강력해질 것입니다.
+
+'원칙 기반 의사결정이 최고의 결과를 만듭니다.'"
+            """.strip()
+
+        elif "Wood" in self.mentor_name:
+            return f"""
+🚀 {self.mentor_name}: "와! 새 능력 해금!
+
+🎯 획득한 스킬: {skill_name}
+
+혁신을 분석하는 능력이 업그레이드되었어요!
+미래 기술을 평가하는 눈이 점점 좋아지고 있습니다.
+
+'혁신을 이해하는 투자자만이 미래를 선점합니다!'"
+            """.strip()
+
+        return f"🎯 새 스킬 획득: {skill_name}"
+
+    def get_puzzle_mastery_feedback(self, puzzle_type: str, mastery_level: int) -> str:
+        """퍼즐 유형별 숙련도 피드백"""
+        mastery_names = {
+            1: "입문",
+            2: "초급",
+            3: "중급",
+            4: "고급",
+            5: "마스터"
+        }
+
+        mastery_name = mastery_names.get(mastery_level, f"레벨 {mastery_level}")
+
+        puzzle_type_korean = {
+            "price_drop": "급락 분석",
+            "price_surge": "급등 분석",
+            "volatility": "변동성 분석",
+            "divergence": "괴리 분석",
+            "mystery": "미스터리 해결"
+        }
+
+        puzzle_name = puzzle_type_korean.get(puzzle_type, puzzle_type)
+
+        return f"""
+📊 **숙련도 상승!**
+
+🎯 {puzzle_name} - {mastery_name} 달성!
+
+이 유형의 퍼즐을 점점 더 잘 이해하게 되었습니다.
+같은 유형의 퍼즐에서 더 높은 정확도와 보상을 얻을 수 있어요!
+        """.strip()
+
+    def get_first_time_achievement_feedback(self, achievement_type: str) -> str:
+        """첫 달성 피드백"""
+        achievements = {
+            "first_puzzle": {
+                "title": "첫 퍼즐 해결",
+                "message": "투자의 세계로 첫 발을 내딛었습니다!"
+            },
+            "first_correct": {
+                "title": "첫 정확한 예측",
+                "message": "시장을 읽는 눈이 열리기 시작했습니다!"
+            },
+            "first_advanced": {
+                "title": "첫 고급 퍼즐 도전",
+                "message": "더 어려운 도전을 두려워하지 않는 용기!"
+            },
+            "first_master": {
+                "title": "첫 마스터 퍼즐 완료",
+                "message": "진정한 리스크 마스터의 길을 걷고 있습니다!"
+            },
+            "first_perfect": {
+                "title": "첫 완벽한 분석",
+                "message": "100% 정확도! 놀라운 통찰력입니다!"
+            }
+        }
+
+        achievement = achievements.get(achievement_type, {
+            "title": achievement_type,
+            "message": "새로운 성취를 달성했습니다!"
+        })
+
+        if "Buffett" in self.mentor_name:
+            mentor_comment = f"\n\n🏛️ {self.mentor_name}: '모든 여정은 첫 걸음부터 시작됩니다. 훌륭해요!'"
+        elif "Lynch" in self.mentor_name:
+            mentor_comment = f"\n\n📈 {self.mentor_name}: '이런 순간이 투자자로서의 성장을 만듭니다!'"
+        elif "Graham" in self.mentor_name:
+            mentor_comment = f"\n\n🎓 {self.mentor_name}: '체계적 학습의 결실입니다.'"
+        elif "Dalio" in self.mentor_name:
+            mentor_comment = f"\n\n🌍 {self.mentor_name}: '원칙을 따르면 이런 결과가 나옵니다.'"
+        elif "Wood" in self.mentor_name:
+            mentor_comment = f"\n\n🚀 {self.mentor_name}: '혁신적 사고의 첫 열매예요!'"
+        else:
+            mentor_comment = ""
+
+        return f"""
+🏅 **업적 달성!**
+
+🎯 {achievement['title']}
+💬 {achievement['message']}{mentor_comment}
+        """.strip()
+
+    def get_comeback_feedback(self, days_since_last_play: int) -> str:
+        """복귀 유저 피드백"""
+        if days_since_last_play < 3:
+            return ""
+
+        if "Buffett" in self.mentor_name:
+            return f"""
+🏛️ {self.mentor_name}: "돌아오셨군요! {days_since_last_play}일 만이네요.
+
+시장은 항상 기회를 제공합니다.
+오늘 다시 시작하는 것이 가장 중요해요.
+
+'최고의 투자 시점은 어제였고, 두 번째로 좋은 시점은 오늘입니다.'
+
+다시 함께 성장해봅시다!"
+            """.strip()
+
+        elif "Lynch" in self.mentor_name:
+            return f"""
+📈 {self.mentor_name}: "오! {days_since_last_play}일 만에 돌아왔군요!
+
+시장은 계속 변하고 있어요.
+새로운 기회들이 기다리고 있습니다!
+
+쉬는 동안에도 좋은 회사들은 계속 성장했을 거예요.
+다시 함께 찾아볼까요?"
+            """.strip()
+
+        return f"다시 오신 것을 환영합니다! {days_since_last_play}일 만이네요."
+
+    def get_encouragement_on_failure(self, consecutive_failures: int) -> str:
+        """실패 시 격려 메시지"""
+        if "Buffett" in self.mentor_name:
+            messages = [
+                "실패는 학습의 일부입니다. 저도 수많은 실수를 했어요.",
+                "버크셔 해서웨이 초기에도 많은 실패가 있었습니다.",
+                "중요한 것은 실패에서 배우는 것입니다.",
+                "인내심을 가지세요. 좋은 투자자가 되는 데는 시간이 걸립니다.",
+                "포기하지 마세요. 당신은 성장하고 있습니다."
+            ]
+        elif "Lynch" in self.mentor_name:
+            messages = [
+                "저도 10개 투자 중 6개만 맞추면 훌륭한 성과였어요!",
+                "실패한 투자에서 배운 것이 성공한 투자보다 많습니다.",
+                "좋은 회사를 찾는 눈은 경험에서 옵니다.",
+                "실패도 투자 경험의 일부예요. 계속하세요!",
+                "10-Bagger를 찾으려면 많은 시행착오가 필요해요."
+            ]
+        elif "Graham" in self.mentor_name:
+            messages = [
+                "객관적 분석에도 불확실성은 존재합니다.",
+                "안전마진을 확보했다면 실패도 제한적입니다.",
+                "데이터를 더 꼼꼼히 분석해보세요.",
+                "실패는 새로운 분석 도구를 배울 기회입니다.",
+                "체계적 접근을 계속하세요. 결과가 따라올 겁니다."
+            ]
+        elif "Dalio" in self.mentor_name:
+            messages = [
+                "실패는 원칙을 개선할 기회입니다.",
+                "무엇이 잘못되었는지 분석하세요. 그게 성장입니다.",
+                "시스템을 조정하면 됩니다. 포기할 필요 없어요.",
+                "모든 성공한 투자자는 실패를 경험했습니다.",
+                "경험에서 배우는 것이 Bridgewater의 문화입니다."
+            ]
+        elif "Wood" in self.mentor_name:
+            messages = [
+                "혁신 투자는 변동성이 큽니다. 정상이에요!",
+                "ARK 펀드도 큰 변동을 겪었어요. 장기적 관점이 중요합니다.",
+                "실패도 미래를 위한 학습입니다.",
+                "혁신을 이해하는 것은 쉽지 않아요. 계속 시도하세요!",
+                "파괴적 혁신을 알아보는 눈은 시간이 걸립니다."
+            ]
+        else:
+            messages = ["실패해도 괜찮습니다. 다시 도전하세요!"]
+
+        import random
+        message = random.choice(messages)
+
+        if consecutive_failures >= 3:
+            extra = "\n\n💡 힌트: 더 많은 단서를 수집하고 신중하게 가설을 세워보세요."
+        else:
+            extra = ""
+
+        return f"🏛️ {self.mentor_name}: \"{message}\"{extra}"
